@@ -1,0 +1,38 @@
+name: One-time Hixton snapshot import
+
+on:
+  push:
+    paths:
+      - ".github/workflows/import-hixton-snapshot.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          path: target
+          fetch-depth: 0
+
+      - name: Checkout verified Hixton source snapshot
+        uses: actions/checkout@v4
+        with:
+          repository: 127027/Der-Hixton-von-GPT
+          ref: 8c80fc875631822333186231c27720ebcb923b53
+          path: source
+          fetch-depth: 1
+
+      - name: Replace target tree with source snapshot
+        shell: bash
+        run: |
+          rsync -a --delete --exclude='.git' source/ target/
+          cd target
+          git config user.name "hixton-import[bot]"
+          git config user.email "hixton-import@users.noreply.github.com"
+          git add -A
+          git commit -m "import: Hixton snapshot 8c80fc875631822333186231c27720ebcb923b53"
+          git push origin HEAD:main
